@@ -214,9 +214,9 @@ def open_question_3():
     '''
     return inspect.cleandoc("""We can see the tweets at the top of the list are in English,at an entropy
     around 2.5,and the tweets at the end of the list are in Japanese,at around 17.5.This is a big range,going from a
-    good entropy of 2.5,compared to the human 1.3,to 7 times that.This makes sense, as our model was trained in
-    English on the Brown corpus,not Japanese,so it has learned bigrams of letters in English,and can predict English
-    words,whereas it has never seen Japanese characters so can't predict what comes next.""")[0:500]
+    good entropy of 2.5,compared to the human 1.3,to 7 times that.This makes sense, as our model was trained in English
+    on the Brown corpus,not Japanese,so it has learned bigrams of letters in English,and can predict English
+    words,whereas it has never seen Japanese characters so can't predict what comes next""")[0:500]
 
 
 # Question 4 [8 marks]
@@ -227,14 +227,13 @@ def open_question_4() -> str:
     :rtype: str
     :return: your answer [500 chars max]
     '''
-    return inspect.cleandoc("""Still contain emoji parts,e.g :D ->d.These will
-    only be 1 letter,so we can fix this by removing all words<1,leaving a and I.
-    Has chars not in the Latin alphabet,e.g Japanese.Can remove these by only keeping words containing ascii chars 97-122.
-    Has words in foreign languages,e.g Spanish.Can use a language detection package e.g langdetect,to identify
-    and remove non-English words.
-    Has misspellings,can use another package e.g TextBlob to correct them.
-    Has abbreviations/slang,e.g lol.Can try to create helper function to expand abbreviations and standardize slang
-    okayy->ok, ty->thank you""")[0:500]
+    return inspect.cleandoc("""Still contain emoji parts,eg :D ->d.They will only be 1 char,so we can remove all
+    words<1,but a i and u
+    Has chars not in the Latin alphabet,eg Japanese.Remove words not containing ascii chars 97-122
+    Has words in foreign languages,eg Spanish.Use language detection eg langdetect,to identify and remove non-English
+    words
+    Has misspellings,use another package eg TextBlob to correct
+    Has shortenings/slang,eg lol.Can create helper functions to expand and standardize slang u->you,ty->thankyou""")[0:500]
 
 
 # Question 5 [15 marks]
@@ -286,19 +285,20 @@ def open_question_6():
     :rtype: str
     :return: your answer [1000 chars max]
     """
-    return inspect.cleandoc("""1:The question says English in general.We cannot get a data set of the whole English
-    language.To simplify this,we can pick a dataset to represent it and exemplify its different forms e.g
-    speaking/written,formal/informal,modern/historical.
-    2:The question doesn't specify what probability is being used to calculate entropy,humans can be used to form a
-    prediction,or we can use a model e.g ngrams.
-    3:The question says entropy,but we want the entropy of our model's prediction relative to the true probability, this
-    is cross entropy.We cannot know the true probability,as again it would require the entire English language,so we
-    estimate cross entropy using the what occurs in our corpus.
-    To carry out this experiment,I would use the BNC as a corpora,as it contains an extensive,wide range of English,
-    cleaned of punctuation and lowercased and train a ngram model using backoff to weight different values of n,where
-    exact values could be experimented with.As the BNC is large it also enables us to split the data into multiple
-    rounds of training and testing to get a good estimate value for the entropy.
-    """)[:1000]
+    return inspect.cleandoc("""1:It says English in general.We cant get a dataset of the whole English
+    language,but to simplify we can pick a dataset to represent it and exemplify its different forms
+    speaking/written,formal/informal,modern/historical eg the BNC
+    
+    2:It doesnt specify what probability is used to calculate entropy,humans can be used to form a prediction,or we can
+    use a model to simplify eg ngrams
+    
+    3:It says entropy,but we want the entropy of our models prediction relative to the true probability, this is cross
+    entropy.We cannot know the true prob,as again it requires all English,so to simplify we use an estimation of cross
+    entropy using what occurs in our corpus
+    
+    The question is then what is the estimated cross entropy of an ngram model on the BNC.To carry this out,I would
+    clean the data of punctuation and lowercase it,then train an ngram model and measure the cross entropy.As the BNC is
+    large it enables us to split the data into multiple rounds of training and testing to get the strongest value for n""")[:1000]
 
 
 #############################################
@@ -362,6 +362,7 @@ class NaiveBayes:
             likelihood[c][f] = P(f|c)
         """
         assert alpha >= 0.0
+        # Get a dictionary of classes and the number of documents, and each feature that class has
         classes = {}
         for doc in data:
             if doc[1] not in classes:
@@ -372,6 +373,7 @@ class NaiveBayes:
                 if vocab[i] in doc[0]:
                     classes[doc[1]][1][i] += 1
 
+        # Calculate the priors and likelihoods add to new dictionaries
         priors = {}
         likelihoods = {}
         for c, feature_counts in classes.items():
@@ -393,6 +395,7 @@ class NaiveBayes:
         """
         d_probs = {}
         prob_d = 0
+        # Calculate P(d|c)P(c) seperately to P(d) for each class
         for c, c_likelihoods in self.likelihood.items():
             feats_given_c = 1
             for feat in d:
@@ -401,6 +404,7 @@ class NaiveBayes:
             d_probs[c] = self.prior[c] * feats_given_c
             prob_d += self.prior[c] * feats_given_c
 
+        # Combine to calculate P(c|d) = P(d|c)P(c)/P(d) for each class
         for c in d_probs.keys():
             d_probs[c] = d_probs[c] / prob_d
 
@@ -414,6 +418,7 @@ class NaiveBayes:
         :rtype: str
         :return: The most likely class.
         """
+        # Get the class probabilities for d and return the class of the highest one
         d_probs = self.prob_classify(d)
         return max(d_probs, key=d_probs.get)
 
@@ -425,8 +430,13 @@ def open_question_8() -> str:
     :rtype: str
     :return: Your answer of 500 characters maximum.
     """
-    return inspect.cleandoc("""Preposition is most informative, but all words are informative in predicting attachment
-    Logistic regression better here""")[:500]
+    return inspect.cleandoc("""We can see that using all the words as features gives the best accuracy.Whereas just one
+    word,gives a lower accuracy.This makes sense,as when naturally assigning attachment,we do use all the words in a
+    sentence,as they can all have impact.But of those,P is the most informative,as it is only 5% less accurate than
+    using all 4
+    
+    When comparing LR with NB,NB has a little lower accuracy.This is most likely because NB cannot weight the most
+    informative features,but takes them all into account equally""")[:500]
 
 
 # Feature extractors used in the table:
@@ -452,16 +462,6 @@ def feature_extractor_5(v, n1, p, n2):
 
 
 # Question 9.1 [5 marks]
-# from sklearn.feature_extraction.text import TfidfVectorizer
-# tf=TfidfVectorizer()
-# # text_tf= tf.fit_transform(data['Phrase'])
-#
-# from sklearn.feature_extraction.text import CountVectorizer
-# from nltk.tokenize import RegexpTokenizer
-# #tokenizer to remove unwanted elements from out data like symbols and numbers
-# token = RegexpTokenizer(r'[a-zA-Z0-9]+')
-# cv = CountVectorizer(lowercase=True,stop_words='english',ngram_range = (1,1),tokenizer = token.tokenize)
-# # text_counts= cv.fit_transform(data['Phrase'])
 
 def pos_tag(word):
     tag = nltk.pos_tag([word])
@@ -487,13 +487,17 @@ def your_feature_extractor(v, n1, p, n2):
     :rtype: list(any)
     :return: A list of features produced by you.
     """
-    # features = [("v", v), ("n1", n1), ("p", p), ("n2", n2), ("p n2", (p, n2)), ("n1 p", (n1, p)), ("v p", (v, p)), ("v n2", (v, n2)), ("v n1 n2", (v, n1, n2))]
-    # pos_v = pos_tag(v)
-    # v = stem(v)
-    # n1 = stem(n1)
-    # n2 = stem(n2)
-    features = [("v", v), ("n1", n1), ("p", p), ("n2", n2), ("p n1", (p, n1)), ("p n2", (p, n2)), ("v p", (v, p)), ("v n2", (v, n2)),
-                ("p n1 n2", (p, n1, n2)), ("len n1 n2", len(n1 + n2)), ("n1 proper", n1[0].isupper()), ("n2 proper", n2[0].isupper())]
+    features = [("v", v), ("n1", n1), ("p", p), ("n2", n2), ("v p", (v, p)), ("p n1", (p, n1)), ("p n2", (p, n2)),
+                ("v n2", (v, n2)), ("p n1 n2", (p, n1, n2)), ("len n1 n2", len(n1 + n2)), ("verb to", (v, p == "to")),
+                ("n1 proper", n1[0].isupper()), ("n2 proper", n2[0].isupper()), ("n2 pos", pos_tag(n2)),
+                ("n2 number", n2.isdigit())]
+    # I've left here a few features I tried to implement that didn't help or made the accuracy worse, but logically I
+    # think should work, but I must either be wrong or be doing them wrong
+    # ("v pos", pos_tag(v)) I really thought the verb tense would help, but it always seemed to make my model worse
+    # ("v stem", stem(v))
+    # ("n1 stem", stem(n1))
+    # ("n1 stem", stem(n1)) I wanted to include the stem and POS as separate features for each of these, but it didn't help
+    # ("n1 n2 pos", (pos_tag(n1), pos_tag(n2)))
     return features
 
 
@@ -506,10 +510,20 @@ def open_question_9():
     :rtype: str
     :return: Your answer of 1000 characters maximum.
     """
-    return inspect.cleandoc("""1.
-    2.
-    3. Not in top 30, but 0.2% accuracy increase, length of n1+n2. Do not know why informative, only guess is that when
-    n1 and n2 are both numbers, so shorter, it is more likely to be a verb.""")[:1000]
+    return inspect.cleandoc("""Clearly from q8 using single words in the PP is
+    informative.My template attempts to extend this,including combinations of these words as well.Eg the combination of
+    the N1 and the P,as these are what we use to naturally tell attachment.I also tried to use the information from the
+    nouns that cannot be gained from the words alone,eg POS
+    
+    1.(v=rose,p=to),(v=fell,p=to) I started using just (v,p),and began to see these patterns with a verb and "to"
+    indicating noun attachment.This is because the P "to" alone occurs too frequently and does not indicate
+    attachment,but in conjunction with some verbs like rose,it does
+    
+    2.(p=for,n2=years),(p=over,n2=years) This is a similar pattern,but with (p,n2) indicating noun attachment.Alone
+    n2=years doesn't,but with "for" or "over",it captures our natural understanding of it
+    
+    3.Low values of len(n1+n2) indicate verb attachment.Not in top 30,but increases accuracy.My only theory is that if
+    n1 and n2 are both numbers,so shorter,it is more likely to be a verb""")[:1000]
 
 
 """
@@ -540,10 +554,10 @@ def answers():
     print("*** Question 2 ***")
     ents = tweet_ent(twitter_file_ids, lm)
     print("Best 10 english entropies:")
-    best10_ents = ents[:20]
+    best10_ents = ents[:10]
     ppEandT(best10_ents)
     print("Worst 10 english entropies:")
-    worst10_ents = ents[-20:]
+    worst10_ents = ents[-10:]
     ppEandT(worst10_ents)
 
     print("*** Question 3 ***")
